@@ -7,7 +7,7 @@ use super::literals_section_decoder::decode_literals;
 use super::sequence_section_decoder::decode_sequences;
 use crate::decoding::scratch::DecoderScratch;
 use crate::decoding::sequence_execution::execute_sequences;
-use std::io::Read;
+use crate::io::Read;
 
 pub struct BlockDecoder {
     header_buffer: [u8; 3],

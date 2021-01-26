@@ -1,5 +1,8 @@
-use std::hash::Hasher;
+use core::hash::Hasher;
+use core::ptr;
+use core::mem;
 use twox_hash::XxHash64;
+use crate::io::{Read, Write, Error};
 
 pub struct Decodebuffer {
     pub buffer: Vec<u8>,
@@ -10,8 +13,8 @@ pub struct Decodebuffer {
     pub hash: XxHash64,
 }
 
-impl std::io::Read for Decodebuffer {
-    fn read(&mut self, target: &mut [u8]) -> std::result::Result<usize, std::io::Error> {
+impl Read for Decodebuffer {
+    fn read(&mut self, target: &mut [u8]) -> Result<usize, Error> {
         let max_amount = self.can_drain_to_window_size().unwrap_or(0);
 
         let amount = if max_amount > target.len() {
@@ -136,7 +139,7 @@ impl Decodebuffer {
                     let slice = &mut self.buffer[start_idx..];
                     let src = slice.as_mut_ptr();
                     let dst = src.add(slice.len() - match_length);
-                    std::ptr::copy_nonoverlapping(src, dst, match_length);
+                    ptr::copy_nonoverlapping(src, dst, match_length);
                 }
             }
             self.total_output_counter += match_length as u64;
@@ -174,8 +177,8 @@ impl Decodebuffer {
 
     pub fn drain_to_window_size_writer(
         &mut self,
-        sink: &mut dyn std::io::Write,
-    ) -> Result<usize, std::io::Error> {
+        sink: &mut dyn Write,
+    ) -> Result<usize, Error> {
         match self.can_drain_to_window_size() {
             None => Ok(0),
             Some(can_drain) => {
@@ -195,13 +198,13 @@ impl Decodebuffer {
         self.hash.write(&self.buffer);
 
         let new_buffer = Vec::with_capacity(self.buffer.capacity());
-        std::mem::replace(&mut self.buffer, new_buffer)
+        mem::replace(&mut self.buffer, new_buffer)
     }
 
     pub fn drain_to_writer(
         &mut self,
-        sink: &mut dyn std::io::Write,
-    ) -> Result<usize, std::io::Error> {
+        sink: &mut dyn Write,
+    ) -> Result<usize, Error> {
         self.hash.write(&self.buffer);
         sink.write_all(&self.buffer)?;
 
@@ -210,7 +213,7 @@ impl Decodebuffer {
         Ok(len)
     }
 
-    pub fn read_all(&mut self, target: &mut [u8]) -> Result<usize, std::io::Error> {
+    pub fn read_all(&mut self, target: &mut [u8]) -> Result<usize, Error> {
         let amount = if self.buffer.len() > target.len() {
             target.len()
         } else {

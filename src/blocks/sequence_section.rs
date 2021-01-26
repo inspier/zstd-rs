@@ -1,3 +1,4 @@
+use core::fmt;
 pub struct SequencesHeader {
     pub num_sequences: u32,
     pub modes: Option<CompressionModes>,
@@ -10,8 +11,8 @@ pub struct Sequence {
     pub of: u32,
 }
 
-impl std::fmt::Display for Sequence {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for Sequence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "LL: {}, ML: {}, OF: {}", self.ll, self.ml, self.of)
     }
 }
@@ -32,7 +33,7 @@ impl CompressionModes {
             1 => ModeType::RLE,
             2 => ModeType::FSECompressed,
             3 => ModeType::Repeat,
-            _ => panic!("This can never happen"),
+            _ => unreachable!(),
         }
     }
 

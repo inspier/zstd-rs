@@ -1,3 +1,4 @@
+use core::fmt;
 pub enum BlockType {
     Raw,
     RLE,
@@ -5,13 +6,13 @@ pub enum BlockType {
     Reserved,
 }
 
-impl std::fmt::Display for BlockType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for BlockType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             BlockType::Compressed => write!(f, "Compressed"),
             BlockType::Raw => write!(f, "Raw"),
             BlockType::RLE => write!(f, "RLE"),
-            BlockType::Reserved => write!(f, "Reserverd"),
+            BlockType::Reserved => write!(f, "Reserved"),
         }
     }
 }

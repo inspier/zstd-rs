@@ -2,10 +2,13 @@ use super::frame;
 use crate::decoding;
 use crate::decoding::dictionary::Dictionary;
 use crate::decoding::scratch::DecoderScratch;
+#[cfg(feature = "std")]
 use std::collections::HashMap;
-use std::convert::TryInto;
-use std::hash::Hasher;
-use std::io::Read;
+#[cfg(feature = "alloc")]
+use hashbrown::HashMap;
+use core::convert::TryInto;
+use core::hash::Hasher;
+use crate::io::{Read, Write, Error};
 
 /// This implements a decoder for zstd frames. This decoder is able to decode frames only partially and gives control
 /// over how many bytes/blocks will be decoded at a time (so you dont have to decode a 10GB file into memory all at once).
@@ -36,7 +39,7 @@ use std::io::Read;
 ///
 ///         // read from the decoder to collect bytes from the internal buffer
 ///         let bytes_read = frame_dec.read(result.as_mut_slice()).unwrap();
-///         
+///
 ///         // then do something with it
 ///         do_something(&result[0..bytes_read]);
 ///     }
@@ -382,8 +385,8 @@ impl FrameDecoder {
     /// After decoding of the frame (is_finished() == true) has finished it will collect all remaining bytes
     pub fn collect_to_writer(
         &mut self,
-        w: &mut dyn std::io::Write,
-    ) -> Result<usize, std::io::Error> {
+        w: &mut dyn Write,
+    ) -> Result<usize, Error> {
         let finished = self.is_finished();
         let state = match &mut self.state {
             None => return Ok(0),
@@ -566,8 +569,8 @@ impl FrameDecoder {
 
 /// Read bytes from the decode_buffer that are no longer needed. While the frame is not yet finished
 /// this will retain window_size bytes, else it will drain it completely
-impl std::io::Read for FrameDecoder {
-    fn read(&mut self, target: &mut [u8]) -> std::result::Result<usize, std::io::Error> {
+impl Read for FrameDecoder {
+    fn read(&mut self, target: &mut [u8]) -> Result<usize, Error> {
         let state = match &mut self.state {
             None => return Ok(0),
             Some(s) => s,

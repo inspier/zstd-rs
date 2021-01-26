@@ -11,12 +11,18 @@ exclude = ["decodecorpus_files/*", "dict_tests/*", "fuzz_decodecorpus/*"]
 readme = "Readme.md"
 
 [dependencies]
-byteorder = "1.3.4"
+byteorder = { version = "1.4.2", default-features = false }
 twox-hash = { version = "1.6.0", default-features = false }
+hashbrown = { version = "0.9.1", default-features = false, features = ["nightly", "inline-more", "ahash"], optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
 rand = "0.7.3"
+
+[features]
+default = ["std"]
+std = []
+alloc = ["hashbrown"]
 
 [[bench]]
 name = "reversedbitreader_bench"

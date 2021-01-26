@@ -1,4 +1,5 @@
-use super::super::decoding::bit_reader::BitReader;
+use crate::decoding::bit_reader::BitReader;
+use core::fmt;
 
 pub struct LiteralsSection {
     pub regenerated_size: u32,
@@ -14,8 +15,8 @@ pub enum LiteralsSectionType {
     Treeless,
 }
 
-impl std::fmt::Display for LiteralsSectionType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+impl fmt::Display for LiteralsSectionType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             LiteralsSectionType::Compressed => write!(f, "Compressed"),
             LiteralsSectionType::Raw => write!(f, "Raw"),

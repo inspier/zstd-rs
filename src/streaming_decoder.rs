@@ -1,5 +1,5 @@
 use crate::frame_decoder::{BlockDecodingStrategy, FrameDecoder};
-use std::io::Read;
+use crate::io::{Read, Error, ErrorKind};
 
 /// High level decoder that implements a io::Read that can be used with
 /// io::Read::read_to_end / io::Read::read_exact or passing this to another library / module as a source for the decoded content
@@ -32,7 +32,7 @@ impl<'a> StreamingDecoder<'a> {
 }
 
 impl<'a> Read for StreamingDecoder<'a> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
         if self.decoder.is_finished() && self.decoder.can_collect() == 0 {
             //No more bytes can ever be decoded
             return Ok(0);
@@ -52,8 +52,8 @@ impl<'a> Read for StreamingDecoder<'a> {
             ) {
                 Ok(_) => { /*Nothing to do*/ }
                 Err(e) => {
-                    let err = std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    let err = Error::new(
+                        ErrorKind::Other,
                         format!("Error in the zstd decoder: {:?}", e),
                     );
                     return Err(err);

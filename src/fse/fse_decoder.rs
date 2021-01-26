@@ -1,5 +1,6 @@
 use crate::decoding::bit_reader::BitReader;
 use crate::decoding::bit_reader_reverse::BitReaderReversed;
+use core::mem;
 
 #[derive(Clone)]
 pub struct FSETable {
@@ -31,7 +32,7 @@ pub struct Entry {
 const ACC_LOG_OFFSET: u8 = 5;
 
 const fn num_bits<T>() -> usize {
-    std::mem::size_of::<T>() * 8
+    mem::size_of::<T>() * 8
 }
 
 fn highest_bit_set(x: u32) -> u32 {

@@ -1,4 +1,5 @@
-use std::convert::TryInto;
+use core::convert::TryInto;
+use crate::io::Read;
 
 pub const MAGIC_NUM: u32 = 0xFD2F_B528;
 pub const MIN_WINDOW_SIZE: u64 = 1024;
@@ -233,7 +234,6 @@ impl Frame {
     }
 }
 
-use std::io::Read;
 pub fn read_frame_header(r: &mut dyn Read) -> Result<(Frame, u8), String> {
     let mut buf = [0u8; 4];
     let magic_num: u32 = match r.read_exact(&mut buf) {

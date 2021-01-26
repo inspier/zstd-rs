@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use core::convert::TryInto;
 
 use crate::decoding::scratch::FSEScratch;
 use crate::decoding::scratch::HuffmanScratch;

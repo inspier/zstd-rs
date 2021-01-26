@@ -1,6 +1,7 @@
 use crate::decoding::bit_reader_reverse::BitReaderReversed;
 use crate::fse::FSEDecoder;
 use crate::fse::FSETable;
+use core::mem;
 
 #[derive(Clone)]
 pub struct HuffmanTable {
@@ -29,7 +30,7 @@ pub struct Entry {
 const MAX_MAX_NUM_BITS: u8 = 11;
 
 const fn num_bits<T>() -> usize {
-    std::mem::size_of::<T>() * 8
+    mem::size_of::<T>() * 8
 }
 
 fn highest_bit_set(x: u32) -> u32 {

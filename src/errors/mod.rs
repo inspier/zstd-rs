@@ -1,3 +1,4 @@
+use core::fmt;
 #[derive(Debug)]
 pub enum FrameDecoderError {
     FailedToReadBlockHeader(String),
@@ -10,8 +11,8 @@ pub enum FrameDecoderError {
     DictNotProvided,
 }
 
-impl std::fmt::Display for FrameDecoderError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for FrameDecoderError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             FrameDecoderError::FailedToReadBlockBody(m) => {
                 write!(f, "Failed to parse/decode block body: {}", m)
@@ -43,6 +44,7 @@ impl std::fmt::Display for FrameDecoderError {
 }
 
 // This is important for other errors to wrap this one.
+#[cfg(feature = "std")]
 impl std::error::Error for FrameDecoderError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         // Generic error, underlying cause isn't tracked.
