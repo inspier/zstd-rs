@@ -2,6 +2,12 @@ use crate::decoding::bit_reader_reverse::BitReaderReversed;
 use crate::fse::FSEDecoder;
 use crate::fse::FSETable;
 use core::mem;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 #[derive(Clone)]
 pub struct HuffmanTable {
@@ -131,12 +137,6 @@ impl HuffmanTable {
                     return Err(format!("FSE table used more bytes: {} than were meant to be used for the whole stream of huffman weights", bytes_used_by_fse_header));
                 }
 
-                if crate::VERBOSE {
-                    println!(
-                        "Building fse table for huffman weights used: {}",
-                        bytes_used_by_fse_header
-                    );
-                }
                 let mut dec1 = FSEDecoder::new(&self.fse_table);
                 let mut dec2 = FSEDecoder::new(&self.fse_table);
 

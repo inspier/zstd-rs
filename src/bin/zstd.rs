@@ -14,17 +14,14 @@ fn main() {
     file_paths.remove(0);
 
     if !flags.contains(&"-d".to_owned()) {
-        eprintln!("This zstd implementation only supports decompression. Please add a \"-d\" flag");
         return;
     }
 
     if !flags.contains(&"-c".to_owned()) {
-        eprintln!("This zstd implementation only supports output on the stdout. Please add a \"-c\" flag and pipe the output into a file");
         return;
     }
 
     if flags.len() != 2 {
-        eprintln!(
             "No flags other than -d and -c are currently implemented. Flags used: {:?}",
             flags
         );
@@ -39,7 +36,6 @@ fn main() {
             old_percentage: -1,
         };
 
-        eprintln!("File: {}", path);
         let mut f = File::open(path).unwrap();
 
         frame_dec.reset(&mut f).unwrap();
@@ -77,21 +73,17 @@ fn main() {
             result.resize(result.capacity(), 0);
         }
 
-        eprintln!("\nDecoded bytes: {}", tracker.bytes_used);
 
         match frame_dec.get_checksum_from_data() {
             Some(chksum) => {
                 if frame_dec.get_calculated_checksum().unwrap() != chksum {
-                    eprintln!(
                         "Checksum did not match! From data: {}, calculated while decoding: {}",
                         chksum,
                         frame_dec.get_calculated_checksum().unwrap()
                     );
                 } else {
-                    eprintln!("Checksums are ok!");
                 }
             }
-            None => eprintln!("No checksums to test"),
         }
     }
 }

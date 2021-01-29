@@ -4,6 +4,12 @@ use super::super::blocks::sequence_section::SequencesHeader;
 use super::bit_reader_reverse::BitReaderReversed;
 use super::scratch::FSEScratch;
 use crate::fse::FSEDecoder;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub fn decode_sequences(
     section: &SequencesHeader,
@@ -12,10 +18,6 @@ pub fn decode_sequences(
     target: &mut Vec<Sequence>,
 ) -> Result<(), String> {
     let bytes_read = maybe_update_fse_tables(section, source, scratch)?;
-
-    if crate::VERBOSE {
-        println!("Updating tables used {} bytes", bytes_read);
-    }
 
     let bit_stream = &source[bytes_read..];
 
@@ -86,16 +88,6 @@ fn decode_sequences_with_rle(
         let (ll_value, ll_num_bits) = lookup_ll_code(ll_code);
         let (ml_value, ml_num_bits) = lookup_ml_code(ml_code);
 
-        //println!("Sequence: {}", i);
-        //println!("of stat: {}", of_dec.state);
-        //println!("of Code: {}", of_code);
-        //println!("ll stat: {}", ll_dec.state);
-        //println!("ll bits: {}", ll_num_bits);
-        //println!("ll Code: {}", ll_value);
-        //println!("ml stat: {}", ml_dec.state);
-        //println!("ml bits: {}", ml_num_bits);
-        //println!("ml Code: {}", ml_value);
-        //println!("");
 
         if of_code >= 32 {
             return Err("Do not support offsets bigger than 1<<32".to_owned());
@@ -116,7 +108,6 @@ fn decode_sequences_with_rle(
         });
 
         if target.len() < section.num_sequences as usize {
-            //println!(
             //    "Bits left: {} ({} bytes)",
             //    br.bits_remaining(),
             //    br.bits_remaining() / 8,
@@ -194,7 +185,6 @@ fn decode_sequences_without_rle(
         });
 
         if target.len() < section.num_sequences as usize {
-            //println!(
             //    "Bits left: {} ({} bytes)",
             //    br.bits_remaining(),
             //    br.bits_remaining() / 8,
@@ -299,16 +289,9 @@ fn maybe_update_fse_tables(
         ModeType::FSECompressed => {
             let bytes = scratch.literal_lengths.build_decoder(source, LL_MAX_LOG)?;
             bytes_read += bytes;
-            if crate::VERBOSE {
-                println!("Updating ll table");
-                println!("Used bytes: {}", bytes);
-            }
             scratch.ll_rle = None;
         }
         ModeType::RLE => {
-            if crate::VERBOSE {
-                println!("Use RLE ll table");
-            }
             if source.is_empty() {
                 return Err("Need a byte to read for RLE ll table".to_owned());
             }
@@ -316,9 +299,6 @@ fn maybe_update_fse_tables(
             scratch.ll_rle = Some(source[0]);
         }
         ModeType::Predefined => {
-            if crate::VERBOSE {
-                println!("Use predefined ll table");
-            }
             scratch.literal_lengths.build_from_probabilities(
                 LL_DEFAULT_ACC_LOG,
                 &Vec::from(&LITERALS_LENGTH_DEFAULT_DISTRIBUTION[..]),
@@ -326,9 +306,6 @@ fn maybe_update_fse_tables(
             scratch.ll_rle = None;
         }
         ModeType::Repeat => {
-            if crate::VERBOSE {
-                println!("Repeat ll table");
-            }
             /* Nothing to do */
         }
     };
@@ -338,17 +315,10 @@ fn maybe_update_fse_tables(
     match modes.of_mode() {
         ModeType::FSECompressed => {
             let bytes = scratch.offsets.build_decoder(of_source, OF_MAX_LOG)?;
-            if crate::VERBOSE {
-                println!("Updating of table");
-                println!("Used bytes: {}", bytes);
-            }
             bytes_read += bytes;
             scratch.of_rle = None;
         }
         ModeType::RLE => {
-            if crate::VERBOSE {
-                println!("Use RLE of table");
-            }
             if of_source.is_empty() {
                 return Err("Need a byte to read for RLE of table".to_owned());
             }
@@ -356,9 +326,6 @@ fn maybe_update_fse_tables(
             scratch.of_rle = Some(of_source[0]);
         }
         ModeType::Predefined => {
-            if crate::VERBOSE {
-                println!("Use predefined of table");
-            }
             scratch.offsets.build_from_probabilities(
                 OF_DEFAULT_ACC_LOG,
                 &Vec::from(&OFFSET_DEFAULT_DISTRIBUTION[..]),
@@ -366,9 +333,6 @@ fn maybe_update_fse_tables(
             scratch.of_rle = None;
         }
         ModeType::Repeat => {
-            if crate::VERBOSE {
-                println!("Repeat of table");
-            }
             /* Nothing to do */
         }
     };
@@ -379,16 +343,9 @@ fn maybe_update_fse_tables(
         ModeType::FSECompressed => {
             let bytes = scratch.match_lengths.build_decoder(ml_source, ML_MAX_LOG)?;
             bytes_read += bytes;
-            if crate::VERBOSE {
-                println!("Updating ml table");
-                println!("Used bytes: {}", bytes);
-            }
             scratch.ml_rle = None;
         }
         ModeType::RLE => {
-            if crate::VERBOSE {
-                println!("Use RLE ml table");
-            }
             if ml_source.is_empty() {
                 return Err("Need a byte to read for RLE ml table".to_owned());
             }
@@ -396,9 +353,6 @@ fn maybe_update_fse_tables(
             scratch.ml_rle = Some(ml_source[0]);
         }
         ModeType::Predefined => {
-            if crate::VERBOSE {
-                println!("Use predefined ml table");
-            }
             scratch.match_lengths.build_from_probabilities(
                 ML_DEFAULT_ACC_LOG,
                 &Vec::from(&MATCH_LENGTH_DEFAULT_DISTRIBUTION[..]),
@@ -406,9 +360,6 @@ fn maybe_update_fse_tables(
             scratch.ml_rle = None;
         }
         ModeType::Repeat => {
-            if crate::VERBOSE {
-                println!("Repeat ml table");
-            }
             /* Nothing to do */
         }
     };
@@ -442,13 +393,6 @@ fn test_ll_default() {
             &Vec::from(&LITERALS_LENGTH_DEFAULT_DISTRIBUTION[..]),
         )
         .unwrap();
-
-    for idx in 0..table.decode.len() {
-        println!(
-            "{:3}: {:3} {:3} {:3}",
-            idx, table.decode[idx].symbol, table.decode[idx].num_bits, table.decode[idx].base_line
-        );
-    }
 
     assert!(table.decode.len() == 64);
 

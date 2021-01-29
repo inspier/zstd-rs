@@ -1,3 +1,7 @@
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 pub struct BitReader<'s> {
     idx: usize, //index counts bits already read
     source: &'s [u8],

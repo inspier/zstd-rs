@@ -1,8 +1,10 @@
+use crate::io::{Error, Read, Write};
 use core::hash::Hasher;
-use core::ptr;
 use core::mem;
+use core::ptr;
 use twox_hash::XxHash64;
-use crate::io::{Read, Write, Error};
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub struct Decodebuffer {
     pub buffer: Vec<u8>,
@@ -175,10 +177,7 @@ impl Decodebuffer {
         }
     }
 
-    pub fn drain_to_window_size_writer(
-        &mut self,
-        sink: &mut dyn Write,
-    ) -> Result<usize, Error> {
+    pub fn drain_to_window_size_writer(&mut self, sink: &mut dyn Write) -> Result<usize, Error> {
         match self.can_drain_to_window_size() {
             None => Ok(0),
             Some(can_drain) => {
@@ -201,10 +200,7 @@ impl Decodebuffer {
         mem::replace(&mut self.buffer, new_buffer)
     }
 
-    pub fn drain_to_writer(
-        &mut self,
-        sink: &mut dyn Write,
-    ) -> Result<usize, Error> {
+    pub fn drain_to_writer(&mut self, sink: &mut dyn Write) -> Result<usize, Error> {
         self.hash.write(&self.buffer);
         sink.write_all(&self.buffer)?;
 

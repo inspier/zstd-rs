@@ -2,13 +2,17 @@ use super::frame;
 use crate::decoding;
 use crate::decoding::dictionary::Dictionary;
 use crate::decoding::scratch::DecoderScratch;
+use crate::io::{Error, Read, Write};
+use core::convert::TryInto;
+use core::hash::Hasher;
+#[cfg(feature = "alloc")]
+use hashbrown::HashMap;
 #[cfg(feature = "std")]
 use std::collections::HashMap;
 #[cfg(feature = "alloc")]
-use hashbrown::HashMap;
-use core::convert::TryInto;
-use core::hash::Hasher;
-use crate::io::{Read, Write, Error};
+use alloc::vec::Vec;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 /// This implements a decoder for zstd frames. This decoder is able to decode frames only partially and gives control
 /// over how many bytes/blocks will be decoded at a time (so you dont have to decode a 10GB file into memory all at once).
@@ -293,26 +297,11 @@ impl FrameDecoder {
         let buffer_size_before = state.decoder_scratch.buffer.len();
         let block_counter_before = state.block_counter;
         loop {
-            if crate::VERBOSE {
-                println!("################");
-                println!("Next Block: {}", state.block_counter);
-                println!("################");
-            }
             let (block_header, block_header_size) = match block_dec.read_block_header(source) {
                 Ok(h) => h,
                 Err(m) => return Err(crate::errors::FrameDecoderError::FailedToReadBlockHeader(m)),
             };
             state.bytes_read_counter += u64::from(block_header_size);
-
-            if crate::VERBOSE {
-                println!();
-                println!(
-                    "Found {} block with size: {}, which will be of size: {}",
-                    block_header.block_type,
-                    block_header.content_size,
-                    block_header.decompressed_size
-                );
-            }
 
             let bytes_read_in_block_body = match block_dec.decode_block_content(
                 &block_header,
@@ -325,10 +314,6 @@ impl FrameDecoder {
             state.bytes_read_counter += bytes_read_in_block_body;
 
             state.block_counter += 1;
-
-            if crate::VERBOSE {
-                println!("Output: {}", state.decoder_scratch.buffer.len());
-            }
 
             if block_header.last_block {
                 state.frame_finished = true;
@@ -383,10 +368,7 @@ impl FrameDecoder {
 
     /// Collect bytes and retain window_size bytes while decoding is still going on.
     /// After decoding of the frame (is_finished() == true) has finished it will collect all remaining bytes
-    pub fn collect_to_writer(
-        &mut self,
-        w: &mut dyn Write,
-    ) -> Result<usize, Error> {
+    pub fn collect_to_writer(&mut self, w: &mut dyn Write) -> Result<usize, Error> {
         let finished = self.is_finished();
         let state = match &mut self.state {
             None => return Ok(0),

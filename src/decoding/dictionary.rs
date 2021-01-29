@@ -2,6 +2,10 @@ use core::convert::TryInto;
 
 use crate::decoding::scratch::FSEScratch;
 use crate::decoding::scratch::HuffmanScratch;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub struct Dictionary {
     pub id: u32,

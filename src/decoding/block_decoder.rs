@@ -8,6 +8,10 @@ use super::sequence_section_decoder::decode_sequences;
 use crate::decoding::scratch::DecoderScratch;
 use crate::decoding::sequence_execution::execute_sequences;
 use crate::io::Read;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub struct BlockDecoder {
     header_buffer: [u8; 3],
@@ -39,8 +43,8 @@ impl BlockDecoder {
     ) -> Result<u64, String> {
         match self.internal_state {
             DecoderState::ReadyToDecodeNextBody => {/* Happy :) */},
-            DecoderState::Failed => return Err("Cant decode next block if failed along the way. Results will be nonsense".to_string()),
-            DecoderState::ReadyToDecodeNextHeader => return Err("Cant decode next block body, while expecting to decode the header of the previous block. Results will be nonsense".to_string()),
+            DecoderState::Failed => return Err("Cant decode next block if failed along the way. Results will be nonsense".to_owned()),
+            DecoderState::ReadyToDecodeNextHeader => return Err("Cant decode next block body, while expecting to decode the header of the previous block. Results will be nonsense".to_owned()),
         }
 
         match header.block_type {
@@ -54,7 +58,7 @@ impl BlockDecoder {
                     Ok(_) => {
                         self.internal_state = DecoderState::ReadyToDecodeNextHeader;
                     }
-                    Err(_) => return Err("Error while reading the one RLE byte".to_string()),
+                    Err(_) => return Err("Error while reading the one RLE byte".to_owned()),
                 }
 
                 for i in 1..BATCH_SIZE {
@@ -81,7 +85,7 @@ impl BlockDecoder {
                             workspace.buffer.push(&buf[..]);
                         }
                         Err(_) => {
-                            return Err("Error while reading bytes of the raw block".to_string())
+                            return Err("Error while reading bytes of the raw block".to_owned())
                         }
                     }
                 }
@@ -92,7 +96,7 @@ impl BlockDecoder {
                         workspace.buffer.push(smaller);
                     }
                     Err(_) => {
-                       return Err("Error while reading bytes of the raw block".to_string())
+                       return Err("Error while reading bytes of the raw block".to_owned())
                     }
                 }
 
@@ -135,12 +139,6 @@ impl BlockDecoder {
         let mut section = LiteralsSection::new();
         let bytes_in_literals_header = section.parse_from_header(raw)?;
         let raw = &raw[bytes_in_literals_header as usize..];
-        if crate::VERBOSE {
-            println!(
-                "Found {} literalssection with regenerated size: {}, and compressed size: {:?}",
-                section.ls_type, section.regenerated_size, section.compressed_size
-            );
-        }
 
         let upper_limit_for_literals = match section.compressed_size {
             Some(x) => x as usize,
@@ -156,9 +154,6 @@ impl BlockDecoder {
         }
 
         let raw_literals = &raw[..upper_limit_for_literals];
-        if crate::VERBOSE {
-            println!("Slice for literals: {}", raw_literals.len());
-        }
 
         workspace.literals_buffer.clear(); //all literals of the previous block must have been used in the sequence execution anyways. just be defensive here
         let bytes_used_in_literals_section = decode_literals(
@@ -176,20 +171,10 @@ impl BlockDecoder {
         assert!(bytes_used_in_literals_section == upper_limit_for_literals as u32);
 
         let raw = &raw[upper_limit_for_literals..];
-        if crate::VERBOSE {
-            println!("Slice for sequences with headers: {}", raw.len());
-        }
 
         let mut seq_section = SequencesHeader::new();
         let bytes_in_sequence_header = seq_section.parse_from_header(raw)?;
         let raw = &raw[bytes_in_sequence_header as usize..];
-        if crate::VERBOSE {
-            println!(
-                "Found sequencessection with sequences: {} and size: {}",
-                seq_section.num_sequences,
-                raw.len()
-            );
-        }
 
         assert!(
             bytes_in_literals_header as u32
@@ -198,9 +183,6 @@ impl BlockDecoder {
                 + raw.len() as u32
                 == header.content_size
         );
-        if crate::VERBOSE {
-            println!("Slice for sequences: {}", raw.len());
-        }
 
         if seq_section.num_sequences != 0 {
             decode_sequences(
@@ -209,9 +191,6 @@ impl BlockDecoder {
                 &mut workspace.fse,
                 &mut workspace.sequences,
             )?;
-            if crate::VERBOSE {
-                println!("Executing sequences");
-            }
             execute_sequences(workspace)?;
         } else {
             workspace.buffer.push(&workspace.literals_buffer);
@@ -230,14 +209,14 @@ impl BlockDecoder {
 
         match r.read_exact(&mut self.header_buffer[0..3]) {
             Ok(_) => {}
-            Err(_) => return Err("Error while reading the block header".to_string()),
+            Err(_) => return Err("Error while reading the block header".to_owned()),
         }
 
         let btype = match self.block_type() {
             Ok(t) => match t {
                 BlockType::Reserved => return Err(
                     "Reserved block occured. This is considered corruption by the documentation"
-                        .to_string(),
+                        .to_owned(),
                 ),
                 _ => t,
             },

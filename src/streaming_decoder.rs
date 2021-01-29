@@ -1,5 +1,7 @@
 use crate::frame_decoder::{BlockDecodingStrategy, FrameDecoder};
-use crate::io::{Read, Error, ErrorKind};
+use crate::io::{Error, ErrorKind, Read};
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 /// High level decoder that implements a io::Read that can be used with
 /// io::Read::read_to_end / io::Read::read_exact or passing this to another library / module as a source for the decoded content

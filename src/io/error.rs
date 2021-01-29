@@ -1,5 +1,5 @@
 pub struct Error {
-    repr: Repr
+    repr: Repr,
 }
 
 use core::fmt;
@@ -41,13 +41,13 @@ pub enum ErrorKind {
 impl Error {
     pub fn new<A>(kind: ErrorKind, _: A) -> Self {
         Self {
-            repr: Repr::Simple(kind)
+            repr: Repr::Simple(kind),
         }
     }
 
     pub fn kind(&self) -> ErrorKind {
         match self.repr {
-            Repr::Simple(kind) => kind
+            Repr::Simple(kind) => kind,
         }
     }
 }

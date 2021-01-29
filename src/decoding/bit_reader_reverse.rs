@@ -1,5 +1,9 @@
 use byteorder::ByteOrder;
 use byteorder::LittleEndian;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub struct BitReaderReversed<'s> {
     idx: isize, //index counts bits already read
@@ -109,8 +113,6 @@ impl<'s> BitReaderReversed<'s> {
         self.bits_in_container -= n as u8;
         let value_masked = value & ((1 << n) - 1);
 
-        //println!("N {}", n);
-        //println!("Bits_Container {}", self.bits_in_container);
 
         assert!(value_masked < (1 << n));
 

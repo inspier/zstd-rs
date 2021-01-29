@@ -110,7 +110,6 @@ fn test_dict_decoding() {
         if !p.ends_with(".zst") {
             continue;
         }
-        println!("Trying file: {}", p);
 
         let mut content = fs::File::open(f.path()).unwrap();
 
@@ -127,16 +126,14 @@ fn test_dict_decoding() {
         match frame_dec.get_checksum_from_data() {
             Some(chksum) => {
                 if frame_dec.get_calculated_checksum().unwrap() != chksum {
-                    println!(
+                panic!(
                         "Checksum did not match! From data: {}, calculated while decoding: {}\n",
                         chksum,
                         frame_dec.get_calculated_checksum().unwrap()
                     );
                 } else {
-                    println!("Checksums are ok!\n");
                 }
             }
-            None => println!("No checksums to test\n"),
         }
 
         let mut original_p = p.clone();
@@ -144,11 +141,10 @@ fn test_dict_decoding() {
         let original_f = fs::File::open(original_p).unwrap();
         let original: Vec<u8> = original_f.bytes().map(|x| x.unwrap()).collect();
 
-        println!("Results for file: {}", p.clone());
         let mut success = true;
 
         if original.len() != result.len() {
-            println!(
+            panic!(
                 "Result has wrong length: {}, should be: {}",
                 result.len(),
                 original.len()
@@ -176,7 +172,6 @@ fn test_dict_decoding() {
         for idx in 0..min {
             if original[idx] != result[idx] {
                 counter += 1;
-                //println!(
                 //    "Original {} not equal to result {} at byte: {}",
                 //    original[idx], result[idx], idx,
                 //);
@@ -184,7 +179,6 @@ fn test_dict_decoding() {
         }
 
         if counter > 0 {
-            println!("Result differs in at least {} bytes from original", counter);
             success = false;
             fail_counter_diff += 1;
         }
@@ -192,22 +186,17 @@ fn test_dict_decoding() {
         if success {
             success_counter += 1;
         } else {
-            failed.push(p.clone().to_string());
+            failed.push(p.clone().to_owned());
         }
         total_counter += 1;
 
         let dur = end_time.as_micros() as usize;
         let speed = result.len() / if dur == 0 { 1 } else { dur };
         let speed_read = file_size as usize / if dur == 0 { 1 } else { dur };
-        println!("SPEED: {}", speed);
-        println!("SPEED_read: {}", speed_read);
         speeds.push(speed);
         speeds_read.push(speed_read);
     }
 
-    println!("###################");
-    println!("Summary:");
-    println!("###################");
     println!(
         "Total: {}, Success: {}, WrongSize: {}, WrongBytecount: {}, Diffs: {}",
         total_counter,
@@ -216,9 +205,7 @@ fn test_dict_decoding() {
         fail_counter_bytes_read,
         fail_counter_diff
     );
-    println!("Failed files: ");
     for f in &failed {
-        println!("{}", f);
     }
 
     let speed_len = speeds.len();
@@ -226,11 +213,8 @@ fn test_dict_decoding() {
     let avg_speed = sum_speed / speed_len;
     let avg_speed_bps = avg_speed * 1_000_000;
     if avg_speed_bps < 1000 {
-        println!("Average speed: {} B/s", avg_speed_bps);
     } else if avg_speed_bps < 1_000_000 {
-        println!("Average speed: {} KB/s", avg_speed_bps / 1000);
     } else {
-        println!("Average speed: {} MB/s", avg_speed_bps / 1_000_000);
     }
 
     let speed_read_len = speeds_read.len();
@@ -238,9 +222,7 @@ fn test_dict_decoding() {
     let avg_speed_read = sum_speed_read / speed_read_len;
     let avg_speed_read_bps = avg_speed_read * 1_000_000;
     if avg_speed_read_bps < 1000 {
-        println!("Average speed reading: {} B/s", avg_speed_read_bps);
     } else if avg_speed_bps < 1_000_000 {
-        println!("Average speed reading: {} KB/s", avg_speed_read_bps / 1000);
     } else {
         println!(
             "Average speed reading: {} MB/s",

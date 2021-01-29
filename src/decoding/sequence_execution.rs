@@ -1,4 +1,8 @@
 use super::scratch::DecoderScratch;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub fn execute_sequences(scratch: &mut DecoderScratch) -> Result<(), String> {
     let mut literals_copy_counter = 0;
@@ -7,8 +11,6 @@ pub fn execute_sequences(scratch: &mut DecoderScratch) -> Result<(), String> {
 
     for idx in 0..scratch.sequences.len() {
         let seq = scratch.sequences[idx];
-        if crate::VERBOSE {}
-        //println!("{}: {}", idx, seq);
 
         if seq.ll > 0 {
             let high = literals_copy_counter + seq.ll as usize;
@@ -23,7 +25,6 @@ pub fn execute_sequences(scratch: &mut DecoderScratch) -> Result<(), String> {
             literals_copy_counter += seq.ll as usize;
 
             //for x in literals {
-            //    println!("{}", x);
             //}
 
             scratch.buffer.push(literals);

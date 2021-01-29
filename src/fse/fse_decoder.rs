@@ -1,6 +1,12 @@
 use crate::decoding::bit_reader::BitReader;
 use crate::decoding::bit_reader_reverse::BitReaderReversed;
 use core::mem;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 #[derive(Clone)]
 pub struct FSETable {
@@ -66,7 +72,6 @@ impl<'t> FSEDecoder<'t> {
         assert!(new_state < self.table.decode.len());
         self.state = new_state;
 
-        //println!("Update: {}, {} -> {}", base_line, add,  self.state);
         Ok(())
     }
 }
@@ -172,7 +177,6 @@ impl FSETable {
             let symbol_count = self.symbol_counter[symbol as usize];
             let (bl, nb) = calc_baseline_and_numbits(table_size as u32, prob as u32, symbol_count);
 
-            //println!("symbol: {:2}, table: {}, prob: {:3}, count: {:3}, bl: {:3}, nb: {:2}", symbol, table_size, prob, symbol_count, bl, nb);
 
             assert!(nb <= self.accuracy_log);
             self.symbol_counter[symbol as usize] += 1;
@@ -218,7 +222,6 @@ impl FSETable {
             } else {
                 unchecked_value
             };
-            //println!("{}, {}, {}", self.symbol_probablilities.len(), unchecked_value, value);
 
             let prob = (value as i32) - 1;
 

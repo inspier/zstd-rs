@@ -3,6 +3,10 @@ use super::super::blocks::literals_section::LiteralsSectionType;
 use super::bit_reader_reverse::BitReaderReversed;
 use super::scratch::HuffmanScratch;
 use crate::huff0::HuffmanDecoder;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
 
 pub fn decode_literals(
     section: &LiteralsSection,
@@ -49,9 +53,6 @@ fn decompress_literals(
         LiteralsSectionType::Compressed => {
             //read Huffman tree description
             bytes_read += scratch.table.build_decoder(source)?;
-            if crate::VERBOSE {
-                println!("Built huffman table using {} bytes", bytes_read);
-            }
         }
         LiteralsSectionType::Treeless => {
             if scratch.table.max_num_bits == 0 {

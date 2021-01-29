@@ -103,16 +103,14 @@ fn test_decode_from_to() {
     match frame_dec.get_checksum_from_data() {
         Some(chksum) => {
             if frame_dec.get_calculated_checksum().unwrap() != chksum {
-                println!(
+                panic!(
                     "Checksum did not match! From data: {}, calculated while decoding: {}\n",
                     chksum,
                     frame_dec.get_calculated_checksum().unwrap()
                 );
             } else {
-                println!("Checksums are ok!\n");
             }
         }
-        None => println!("No checksums to test\n"),
     }
 
     let original_f = File::open("./decodecorpus_files/z000088").unwrap();
@@ -135,7 +133,6 @@ fn test_decode_from_to() {
     for idx in 0..min {
         if original[idx] != result[idx] {
             counter += 1;
-            //println!(
             //    "Original {:3} not equal to result {:3} at byte: {}",
             //    original[idx], result[idx], idx,
             //);
@@ -176,10 +173,9 @@ fn test_specific_file() {
     let original_f = fs::File::open("./decodecorpus_files/z000088").unwrap();
     let original: Vec<u8> = original_f.bytes().map(|x| x.unwrap()).collect();
 
-    println!("Results for file: {}", path);
 
     if original.len() != result.len() {
-        println!(
+        panic!(
             "Result has wrong length: {}, should be: {}",
             result.len(),
             original.len()
@@ -195,14 +191,12 @@ fn test_specific_file() {
     for idx in 0..min {
         if original[idx] != result[idx] {
             counter += 1;
-            //println!(
             //    "Original {:3} not equal to result {:3} at byte: {}",
             //    original[idx], result[idx], idx,
             //);
         }
     }
     if counter > 0 {
-        println!("Result differs in at least {} bytes from original", counter);
     }
 }
 
@@ -237,7 +231,6 @@ fn test_streaming() {
     for idx in 0..min {
         if original[idx] != result[idx] {
             counter += 1;
-            //println!(
             //    "Original {:3} not equal to result {:3} at byte: {}",
             //    original[idx], result[idx], idx,
             //);
@@ -260,7 +253,6 @@ fn test_streaming() {
     let original_f = fs::File::open("./decodecorpus_files/z000068").unwrap();
     let original: Vec<u8> = original_f.bytes().map(|x| x.unwrap()).collect();
 
-    println!("Results for file:");
 
     if original.len() != result.len() {
         panic!(
@@ -279,7 +271,6 @@ fn test_streaming() {
     for idx in 0..min {
         if original[idx] != result[idx] {
             counter += 1;
-            //println!(
             //    "Original {:3} not equal to result {:3} at byte: {}",
             //    original[idx], result[idx], idx,
             //);

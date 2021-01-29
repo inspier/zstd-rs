@@ -8,17 +8,14 @@ fn main() {
     file_paths.remove(0);
 
     if !flags.contains(&"-d".to_owned()) {
-        eprintln!("This zstd implementation only supports decompression. Please add a \"-d\" flag");
         return;
     }
 
     if !flags.contains(&"-c".to_owned()) {
-        eprintln!("This zstd implementation only supports output on the stdout. Please add a \"-c\" flag and pipe the output into a file");
         return;
     }
 
     if flags.len() != 2 {
-        eprintln!(
             "No flags other than -d and -c are currently implemented. Flags used: {:?}",
             flags
         );
@@ -26,7 +23,6 @@ fn main() {
     }
 
     for path in file_paths {
-        eprintln!("File: {}", path);
         let f = File::open(path).unwrap();
         let mut buf_read = std::io::BufReader::new(f);
 

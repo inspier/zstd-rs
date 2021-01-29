@@ -1,5 +1,11 @@
-use core::convert::TryInto;
 use crate::io::Read;
+use core::convert::TryInto;
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 pub const MAGIC_NUM: u32 = 0xFD2F_B528;
 pub const MIN_WINDOW_SIZE: u64 = 1024;
@@ -212,7 +218,7 @@ impl Frame {
                 self.magic_num, MAGIC_NUM
             ))
         } else if self.header.descriptor.reserved_flag() {
-            Err("Reserved Flag set. Must be zero".to_string())
+            Err("Reserved Flag set. Must be zero".to_owned())
         } else {
             match self.header.dictiornary_id() {
                 Ok(_) => match self.header.window_size() {

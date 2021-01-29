@@ -1,3 +1,6 @@
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+
 use core::fmt;
 #[derive(Debug)]
 pub enum FrameDecoderError {

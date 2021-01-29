@@ -1,7 +1,7 @@
 //! A swappable version of [std::io](std::io) that works in `no_std + alloc` environments.
 //! If the feature flag `std` is enabled (as it is by default), this will just re-export types from `std::io`.
-pub mod prelude;
 pub mod error;
+pub mod prelude;
 
 #[cfg(not(feature = "std"))]
 pub mod cursor;
@@ -29,24 +29,26 @@ pub trait Read {
     fn read_exact(&mut self, buf: &mut [u8]) -> Result<()> {
         if let Ok(n) = self.read(buf) {
             if n == buf.len() {
-                return Ok(())
+                return Ok(());
             }
-        } 
+        }
 
-        Err(Error::new(ErrorKind::UnexpectedEof, "Out of bytes in reader"))
+        Err(Error::new(
+            ErrorKind::UnexpectedEof,
+            "Out of bytes in reader",
+        ))
     }
 
     fn bytes(&mut self) -> Bytes<Self>
-        where Self: Sized,
+    where
+        Self: Sized,
     {
-        Bytes {
-            inner: self
-        }
+        Bytes { inner: self }
     }
 }
 
 pub struct Bytes<'a, R: Read> {
-    inner: &'a mut R
+    inner: &'a mut R,
 }
 
 impl<'a, R: Read> Iterator for Bytes<'a, R> {
@@ -54,10 +56,7 @@ impl<'a, R: Read> Iterator for Bytes<'a, R> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut byte = [0u8];
-        Some(
-            self.inner.read_exact(&mut byte)
-                .map(|_| byte[0])
-        )
+        Some(self.inner.read_exact(&mut byte).map(|_| byte[0]))
     }
 }
 
@@ -74,7 +73,10 @@ pub trait Write {
         while !buf.is_empty() {
             match self.write(buf) {
                 Ok(0) => {
-                    return Err(Error::new(ErrorKind::WriteZero, "failed to write whole buffer"));
+                    return Err(Error::new(
+                        ErrorKind::WriteZero,
+                        "failed to write whole buffer",
+                    ));
                 }
                 Ok(n) => buf = &buf[n..],
                 Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
@@ -105,7 +107,10 @@ pub trait Write {
             }
         }
 
-        let mut output = Adaptor { inner: self, error: Ok(()) };
+        let mut output = Adaptor {
+            inner: self,
+            error: Ok(()),
+        };
         match fmt::write(&mut output, fmt) {
             Ok(()) => Ok(()),
             Err(..) => {
